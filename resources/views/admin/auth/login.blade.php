@@ -30,13 +30,13 @@
                     <p>{{ $row }}</p>
                 </div>
             @endforeach @endif
-            {!! Form::open() !!}
+            {!! form()->open() !!}
             <div class="form-group has-feedback">
-                {!! Form::text('username', null, ['class' => 'form-control', 'placeholder' => trans('webed-users::auth.username')]) !!}
-                <span class="glyphicon glyphicon-user form-control-feedback"></span>
+                {!! form()->text('email', null, ['class' => 'form-control', 'placeholder' => trans('webed-users::auth.email')]) !!}
+                <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
             </div>
             <div class="form-group has-feedback">
-                {!! Form::password('password', ['class' => 'form-control', 'placeholder' => trans('webed-users::auth.password')]) !!}
+                {!! form()->password('password', ['class' => 'form-control', 'placeholder' => trans('webed-users::auth.password')]) !!}
                 <span class="glyphicon glyphicon-lock form-control-feedback"></span>
             </div>
             <div class="row">
@@ -47,11 +47,11 @@
                 </div>
                 <!-- /.col -->
                 <div class="col-xs-4">
-                    {!! Form::button(trans('webed-users::auth.sign_in'), ['class' => 'btn btn-primary btn-block btn-flat', 'type' => 'submit']) !!}
+                    {!! form()->button(trans('webed-users::auth.sign_in'), ['class' => 'btn btn-primary btn-block btn-flat', 'type' => 'submit']) !!}
                 </div>
                 <!-- /.col -->
             </div>
-            {!! Form::close() !!}
+            {!! form()->close() !!}
         </div>
     </div>
     <!-- END LOGIN FORM -->

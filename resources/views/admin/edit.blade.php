@@ -159,9 +159,30 @@
                     <div class="tab-pane {{ $curentTab === 'change_password' ? 'active' : '' }}" id="change_password">
                         {!! Form::open(['class' => 'js-validate-form', 'url' => route('admin::users.update-password.post', ['id' => $object->id])]) !!}
                         {!! Form::hidden('_tab', 'change_password') !!}
+                        @if($isLoggedInUser || (!$isLoggedInUser && !has_permissions($loggedInUser, ['edit-other-users'])))
+                            <div class="form-group">
+                                <label>
+                                    <b>
+                                        {{ trans('webed-users::base.old_password') }} <span class="text-danger">(*)</span>
+                                    </b>
+                                </label>
+                                <div class="input-group">
+                                <span class="input-group-addon">
+                                    <i class="fa fa-lock"></i>
+                                </span>
+                                    {!! Form::password('old_password', [
+                                        'class' => 'form-control',
+                                        'id' => 'old_password',
+                                        'autocomplete' => 'off',
+                                    ]) !!}
+                                </div>
+                            </div>
+                        @endif
                         <div class="form-group">
                             <label>
-                                <b>{{ trans('webed-users::base.new_password') }} <span class="text-danger">(*)</span></b>
+                                <b>
+                                    {{ trans('webed-users::base.new_password') }} <span class="text-danger">(*)</span>
+                                </b>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-addon">
@@ -176,7 +197,9 @@
                         </div>
                         <div class="form-group">
                             <label>
-                                <b>{{ trans('webed-users::base.confirmation') }} <span class="text-danger">(*)</span></b>
+                                <b>
+                                    {{ trans('webed-users::base.confirmation') }} <span class="text-danger">(*)</span>
+                                </b>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-addon">

@@ -29,6 +29,7 @@ class UpdateModuleServiceProvider extends ServiceProvider
     {
         register_module_update_batches($this->moduleAlias, [
             '3.1.9' => __DIR__ . '/../../update-batches/3.1.9.php',
+            '3.1.10' => __DIR__ . '/../../update-batches/3.1.10.php',
         ], 'core');
     }
 

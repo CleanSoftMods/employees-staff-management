@@ -23,6 +23,7 @@ return [
     'avatar' => 'Ảnh đại diện',
     'password' => 'Mật khẩu',
     'new_password' => 'Mật khẩu mới',
+    'old_password' => 'Mật khẩu cũ',
     'confirmation' => 'Xác nhận',
     'roles' => 'Vai trò',
 

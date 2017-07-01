@@ -12,11 +12,6 @@ class AuthFrontController extends BaseController
     /**
      * @var string
      */
-    public $username = 'email';
-
-    /**
-     * @var string
-     */
     public $loginPath = 'auth';
 
     /**
@@ -84,9 +79,10 @@ class AuthFrontController extends BaseController
     /**
      * @return array|null|string
      */
-    public function getFailedLoginMessage()
+    protected function getFailedLoginMessage()
     {
         $failedMessage = 'webed-users::auth.failed';
+
         return lang()->has($failedMessage)
             ? lang()->get($failedMessage)
             : 'These credentials do not match our records!!!';

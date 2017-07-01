@@ -262,19 +262,15 @@ class UserController extends BaseAdminController
             return redirect()->back();
         }
 
-        if ((int)$this->loggedInUser->id !== (int)$id) {
-            if (!$this->loggedInUser->hasPermission('edit-other-users')) {
-                abort(\Constants::FORBIDDEN_CODE);
-            }
+        if ($this->loggedInUser->id != $id && !$this->loggedInUser->hasPermission('edit-other-users')) {
+            abort(\Constants::FORBIDDEN_CODE);
         }
-        if ($this->request->exists('roles')) {
-            if (!$this->loggedInUser->hasPermission('assign-roles')) {
-                abort(\Constants::FORBIDDEN_CODE);
-            }
+        if ($this->request->exists('roles') && !$this->loggedInUser->hasPermission('assign-roles')) {
+            abort(\Constants::FORBIDDEN_CODE);
         }
 
         $data = $this->request->except([
-            '_token', '_continue_edit', '_tab', 'username', 'email', 'roles'
+            '_token', '_continue_edit', '_tab', 'username', 'email', 'roles',
         ]);
 
         if ($request->requestHasRoles()) {
@@ -315,6 +311,10 @@ class UserController extends BaseAdminController
     public function postUpdatePassword(UpdateUserPasswordRequest $request, $id)
     {
         $user = $this->repository->find($id);
+
+        if ($this->loggedInUser->id != $id && !$this->loggedInUser->hasPermission('edit-other-users')) {
+            abort(\Constants::FORBIDDEN_CODE);
+        }
 
         return $this->updateUser($user, [
             'password' => $request->get('password'),

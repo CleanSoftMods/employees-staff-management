@@ -23,6 +23,7 @@ return [
     'avatar' => 'Avatar',
     'password' => 'Password',
     'new_password' => 'New password',
+    'old_password' => 'Old password',
     'confirmation' => 'Confirmation',
     'roles' => 'Roles',
 

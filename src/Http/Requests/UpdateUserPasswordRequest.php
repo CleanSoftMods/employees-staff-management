@@ -6,8 +6,20 @@ class UpdateUserPasswordRequest extends Request
 {
     public function rules()
     {
-        return [
-            'password' => 'required|max:60|confirmed|min:5|string'
+        $rules = [
+            'password' => 'required|max:60|confirmed|min:5|string',
         ];
+
+        if (
+            get_current_logged_user_id() == request()->route()->parameter('id') ||
+            (
+                get_current_logged_user_id() != request()->route()->parameter('id')
+                && !has_permissions(get_current_logged_user(), ['edit-other-users'])
+            )
+        ) {
+            $rules['old_password'] = 'required|max:60|min:5|string|old_password:users,password,' . request()->route()->parameter('id');
+        }
+
+        return $rules;
     }
 }

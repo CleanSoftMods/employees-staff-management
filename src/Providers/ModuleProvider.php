@@ -60,20 +60,20 @@ class ModuleProvider extends ServiceProvider
         config([
             'auth.defaults' => [
                 'guard' => 'web-auth',
-                'passwords' => 'users',
+                'passwords' => 'webed-users',
             ],
             'auth.guards.web-auth' => [
                 'driver' => 'session',
-                'provider' => 'users',
+                'provider' => 'webed-users',
             ],
-            'auth.providers.users' => [
+            'auth.providers.webed-users' => [
                 'driver' => 'eloquent',
                 'model' => \WebEd\Base\Users\Models\User::class,
             ],
-            'auth.passwords.users' => [
-                'provider' => 'users',
+            'auth.passwords.webed-users' => [
+                'provider' => 'webed-users',
                 'table' => 'password_resets',
-                'expire' => 60,
+                'expire' => config('webed-auth.front_actions.forgot_password.link_expired_after', 1),
             ],
         ]);
 

@@ -1,11 +1,22 @@
 <?php namespace WebEd\Base\Users\Http\Controllers\Front;
 
+use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
 use WebEd\Base\Http\Controllers\BaseFrontController;
 use WebEd\Base\Users\Http\Requests\ForgotPasswordRequest;
-use WebEd\Base\Users\ServerActions\ForgotPasswordServerAction;
+use Illuminate\Support\Facades\Password;
 
 class ForgotPasswordController extends BaseFrontController
 {
+    use SendsPasswordResetEmails;
+
+    /**
+     * @return mixed
+     */
+    public function broker()
+    {
+        return Password::broker('webed-users');
+    }
+
     public function getIndex()
     {
         $this->setBodyClass('forgot-password-page');
@@ -14,19 +25,21 @@ class ForgotPasswordController extends BaseFrontController
         return $this->view(config('webed-auth.front_actions.forgot_password.view') ?: 'webed-users::front.auth.forgot-password');
     }
 
-    public function postIndex(ForgotPasswordRequest $request, ForgotPasswordServerAction $action)
+    public function postIndex(ForgotPasswordRequest $request)
     {
-        $result = $action->run($request);
+        $response = $this->broker()->sendResetLink(
+            $request->only('email')
+        );
 
-        if ($result['error']) {
+        if ($response != Password::RESET_LINK_SENT) {
             flash_messages()
-                ->addMessages($result['messages'], 'error')
+                ->addMessages(trans($response), 'error')
                 ->showMessagesOnSession();
             return redirect()->back();
         }
 
         flash_messages()
-            ->addMessages($result['messages'], 'success')
+            ->addMessages(trans($response), 'success')
             ->showMessagesOnSession();
 
         return redirect()->to(route('front.web.resolve-pages.get'));

@@ -18,11 +18,6 @@ class AuthController extends BaseController
     /**
      * @var string
      */
-    public $username = 'username';
-
-    /**
-     * @var string
-     */
     public $loginPath = 'auth';
 
     /**

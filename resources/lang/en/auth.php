@@ -4,6 +4,7 @@ return [
     'intro_message' => 'Sign in to start your session',
 
     'username' => 'Username',
+    'email' => 'Email',
     'password' => 'Password',
     'remember_me' => 'Remember me',
     'sign_in' => 'Sign in',

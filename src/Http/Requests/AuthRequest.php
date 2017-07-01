@@ -12,7 +12,7 @@ class AuthRequest extends Request
     public function rules()
     {
         return [
-            'username' => 'required',
+            'email' => 'required',
             'password' => 'required',
         ];
     }

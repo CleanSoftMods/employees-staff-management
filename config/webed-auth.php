@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'login_using' => 'email',
     'front_actions' => [
         'login' => [
             'view' => 'webed-theme::front.auth.login',
@@ -15,9 +16,9 @@ return [
             'controller' => WebEd\Base\Users\Http\Controllers\Front\ForgotPasswordController::class,
             'email_template' => WEBED_USERS . '::front.emails.forgot-password',
             /**
-             * The unit is day. Only accept integer.
+             * The unit is in minute. Only accept integer.
              */
-            'link_expired_after' => 1,
+            'link_expired_after' => 60,
         ],
         'reset_password' => [
             'view' => 'webed-theme::front.auth.reset-password',

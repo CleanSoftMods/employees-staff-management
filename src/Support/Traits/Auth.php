@@ -45,10 +45,6 @@ trait Auth
             $this->incrementLoginAttempts($request);
         }
 
-        flash_messages()
-            ->addMessages($this->getFailedLoginMessage(), 'danger')
-            ->showMessagesOnSession();
-
         return $this->sendFailedLoginResponse($request);
     }
 
@@ -70,8 +66,30 @@ trait Auth
             : 'These credentials do not match our records!!!';
     }
 
+    /**
+     * @return string
+     */
     public function username()
     {
-        return property_exists($this, 'username') ? $this->username : 'email';
+        return config('webed-auth.login_using', 'email') ?: 'email';
+    }
+
+    /**
+     * @param Request $request
+     * @return mixed
+     */
+    protected function sendFailedLoginResponse(Request $request)
+    {
+        if ($request->expectsJson()) {
+            $error = response_with_messages(trans('auth.failed'), true, \Constants::ERROR_CODE);
+            return response()->json($error, 422);
+        }
+
+        flash_messages()
+            ->addMessages($this->getFailedLoginMessage(), 'danger')
+            ->showMessagesOnSession();
+
+        return redirect()->back()
+            ->withInput($request->only($this->username(), 'remember'));
     }
 }

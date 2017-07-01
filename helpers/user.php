@@ -30,6 +30,6 @@ if (!function_exists('get_current_logged_user_id')) {
      */
     function get_current_logged_user_id()
     {
-        return CurrentUserFacade::getUser() ? CurrentUserFacade::getUser()->id : null;
+        return get_current_logged_user() ? get_current_logged_user()->id : null;
     }
 }
