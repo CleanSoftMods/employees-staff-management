@@ -2,6 +2,7 @@
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Socialite\SocialiteServiceProvider;
 use WebEd\Base\Users\Http\Middleware\BootstrapModuleMiddleware;
 
 class ModuleProvider extends ServiceProvider
@@ -82,6 +83,7 @@ class ModuleProvider extends ServiceProvider
         $this->app->register(RepositoryServiceProvider::class);
         $this->app->register(HookServiceProvider::class);
         $this->app->register(EventServiceProvider::class);
+        $this->app->register(SocialiteServiceProvider::class);
 
         /**
          * @var Router $router

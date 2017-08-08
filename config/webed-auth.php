@@ -26,5 +26,8 @@ return [
             'auto_sign_in_after_reset' => true,
             'remember_login' => true,
         ],
+        'social_login' => [
+            'controller' => WebEd\Base\Users\Http\Controllers\Front\SocialAuthController::class,
+        ],
     ],
 ];
