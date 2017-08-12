@@ -63,54 +63,59 @@ Route::group(['prefix' => $adminRoute, 'namespace' => 'WebEd\Base\Users\Http\Con
     });
 });
 
-Route::group(['prefix' => 'auth'], function (Router $router) {
-    $router->get('/', function () {
-        return redirect()->to('auth/login');
-    });
+/**
+ * Front site
+ */
+Route::group(do_filter(BASE_FILTER_PUBLIC_ROUTE, [], WEBED_USERS), function () {
+    Route::group(['prefix' => 'auth'], function (Router $router) {
+        $router->get('/', function () {
+            return redirect()->to('auth/login');
+        });
 
-    $router->get('logout', config('webed-auth.front_actions.login.controller') . '@getLogout')
-        ->middleware('webed.auth-front')
-        ->name('front::auth.logout.get');
+        $router->get('logout', config('webed-auth.front_actions.login.controller') . '@getLogout')
+            ->middleware('webed.auth-front')
+            ->name('front::auth.logout.get');
 
-    $router->group(['middleware' => ['webed.guest-front']], function(Router $router) {
-        /**
-         * Login
-         */
-        $router->get('login', config('webed-auth.front_actions.login.controller') . '@getLogin')
-            ->name('front::auth.login.get');
-        $router->post('login', config('webed-auth.front_actions.login.controller') . '@postLogin')
-            ->name('front::auth.login.post');
+        $router->group(['middleware' => ['webed.guest-front']], function(Router $router) {
+            /**
+             * Login
+             */
+            $router->get('login', config('webed-auth.front_actions.login.controller') . '@getLogin')
+                ->name('front::auth.login.get');
+            $router->post('login', config('webed-auth.front_actions.login.controller') . '@postLogin')
+                ->name('front::auth.login.post');
 
-        /**
-         * Register
-         */
-        $router->get('register', config('webed-auth.front_actions.register.controller') . '@getIndex')
-            ->name('front::auth.register.get');
-        $router->post('register', config('webed-auth.front_actions.register.controller') . '@postIndex')
-            ->name('front::auth.register.post');
+            /**
+             * Register
+             */
+            $router->get('register', config('webed-auth.front_actions.register.controller') . '@getIndex')
+                ->name('front::auth.register.get');
+            $router->post('register', config('webed-auth.front_actions.register.controller') . '@postIndex')
+                ->name('front::auth.register.post');
 
-        /**
-         * Forgot password
-         */
-        $router->get('forgot-password', config('webed-auth.front_actions.forgot_password.controller') . '@getIndex')
-            ->name('front::auth.forgot_password.get');
-        $router->post('forgot-password', config('webed-auth.front_actions.forgot_password.controller') . '@postIndex')
-            ->name('front::auth.forgot_password.post');
+            /**
+             * Forgot password
+             */
+            $router->get('forgot-password', config('webed-auth.front_actions.forgot_password.controller') . '@getIndex')
+                ->name('front::auth.forgot_password.get');
+            $router->post('forgot-password', config('webed-auth.front_actions.forgot_password.controller') . '@postIndex')
+                ->name('front::auth.forgot_password.post');
 
-        /**
-         * Reset password
-         */
-        $router->get('reset-password', config('webed-auth.front_actions.reset_password.controller') . '@getIndex')
-            ->name('front::auth.reset_password.get');
-        $router->post('reset-password', config('webed-auth.front_actions.reset_password.controller') . '@postIndex')
-            ->name('front::auth.reset_password.post');
+            /**
+             * Reset password
+             */
+            $router->get('reset-password', config('webed-auth.front_actions.reset_password.controller') . '@getIndex')
+                ->name('front::auth.reset_password.get');
+            $router->post('reset-password', config('webed-auth.front_actions.reset_password.controller') . '@postIndex')
+                ->name('front::auth.reset_password.post');
 
-        /**
-         * Social login
-         */
-        $router->get('social-login/{provider}', config('webed-auth.front_actions.social_login.controller').'@redirectToProvider')
-            ->name('front::auth.social.login');
-        $router->get('social-login/{provider}/callback', config('webed-auth.front_actions.social_login.controller').'@handleProviderCallback')
-            ->name('front::auth.social.login.callback');
+            /**
+             * Social login
+             */
+            $router->get('social-login/{provider}', config('webed-auth.front_actions.social_login.controller').'@redirectToProvider')
+                ->name('front::auth.social.login');
+            $router->get('social-login/{provider}/callback', config('webed-auth.front_actions.social_login.controller').'@handleProviderCallback')
+                ->name('front::auth.social.login.callback');
+        });
     });
 });
