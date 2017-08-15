@@ -16,21 +16,21 @@
     <div class="layout-1columns">
         <div class="column main">
             @php
-                $curentTab = Request::get('_tab', 'user_profiles');
+                $curentTab = request()->get('_tab', 'user_profiles');
             @endphp
             <div class="nav-tabs-custom">
                 <ul class="nav nav-tabs tab-change-url">
                     <li class="{{ $curentTab === 'user_profiles' ? 'active' : '' }}">
                         <a data-target="#user_profiles"
                            data-toggle="tab"
-                           href="{{ Request::url() }}?_tab=user_profiles"
+                           href="{{ request()->url() }}?_tab=user_profiles"
                            aria-expanded="false">{{ trans('webed-users::base.user_profiles') }}</a>
                     </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="user_profiles">
-                        {!! Form::open(['class' => 'js-validate-form', 'url' => route('admin::users.create.post')]) !!}
-                        {!! Form::hidden('_tab', 'user_profiles') !!}
+                        {!! form()->open(['class' => 'js-validate-form', 'url' => route('admin::users.create.post')]) !!}
+                        {!! form()->hidden('_tab', 'user_profiles') !!}
                         <div class="form-group">
                             <label class="control-label "><b>{{ trans('webed-users::base.display_name') }}</b></label>
                             <input type="text" value="{{ old('display_name') }}"
@@ -89,7 +89,7 @@
                         </div>
                         <div class="form-group">
                             <label class="control-label"><b>{{ trans('webed-users::base.sex') }}</b></label>
-                            {!! Form::customRadio('sex', [
+                            {!! form()->customRadio('sex', [
                                 ['male', trans('webed-core::base.sex.male')],
                                 ['female', trans('webed-core::base.sex.female')],
                                 ['other', trans('webed-core::base.sex.other')],
@@ -129,7 +129,7 @@
                                       rows="5">{!! old('description') !!}</textarea>
                         </div>
                         <div class="form-group">
-                            {!! Form::selectImageBox('avatar', old('avatar')) !!}
+                            {!! form()->selectImageBox('avatar', old('avatar')) !!}
                         </div>
                         <div class="mt10 text-right">
                             <button class="btn btn-primary" type="submit">
@@ -140,7 +140,7 @@
                                 <i class="fa fa-check"></i> {{ trans('webed-core::base.form.save_and_continue') }}
                             </button>
                         </div>
-                        {!! Form::close() !!}
+                        {!! form()->close() !!}
                     </div>
                 </div>
             </div>
