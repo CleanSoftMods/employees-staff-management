@@ -12,7 +12,7 @@ class GuestFront
      */
     public function handle($request, Closure $next)
     {
-        if (auth('web-auth')->check()) {
+        if (auth(config('webed-auth.front_actions.guard'))->check()) {
             return redirect()->to(asset(''));
         }
 

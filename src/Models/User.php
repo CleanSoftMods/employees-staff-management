@@ -22,7 +22,7 @@ class User extends BaseModel implements UserModelContract, AuthenticatableContra
 
     use Notifiable;
 
-    protected $table = 'users';
+    protected $table = 'we_users';
 
     protected $primaryKey = 'id';
 

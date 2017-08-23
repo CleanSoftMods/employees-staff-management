@@ -32,7 +32,7 @@ trait Auth
 
         $credentials = $this->credentials($request);
 
-        $credentials['status'] = 'activated';
+        $credentials['status'] = 1;
 
         if ($this->guard()->attempt($credentials, $request->has('remember'))) {
             return $this->sendLoginResponse($request);

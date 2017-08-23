@@ -12,8 +12,8 @@ class CreateUserRequest extends Request
     public function rules()
     {
         return [
-            'username' => 'required|between:3,100|string|unique:users|alpha_dash',
-            'email' => 'required|between:5,255|email|unique:users',
+            'username' => 'required|between:3,100|string|unique:we_users|alpha_dash',
+            'email' => 'required|between:5,255|email|unique:we_users',
             'password' => 'required|max:60|min:5|string',
             'status' => 'string|required|in:activated,disabled,deleted',
             'display_name' => 'string|between:1,150|nullable',

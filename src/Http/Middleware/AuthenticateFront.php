@@ -21,7 +21,7 @@ class AuthenticateFront
             return $next($request);
         }
 
-        if (auth('web-auth')->guest()) {
+        if (auth(config('webed-auth.front_actions.guard'))->guest()) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response_with_messages('Unauthorized.', true, \Constants::UNAUTHORIZED_CODE);
             }

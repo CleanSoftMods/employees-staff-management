@@ -2,7 +2,9 @@
 
 return [
     'login_using' => 'email',
+    'guard' => 'web',
     'front_actions' => [
+        'guard' => 'web',
         'login' => [
             'view' => 'webed-theme::front.auth.login',
             'controller' => WebEd\Base\Users\Http\Controllers\Front\AuthFrontController::class,

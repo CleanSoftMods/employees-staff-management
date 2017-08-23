@@ -12,7 +12,7 @@ class GuestAdmin
      */
     public function handle($request, Closure $next)
     {
-        if (auth('web-auth')->check()) {
+        if (auth(config('webed-auth.guard'))->check()) {
             return redirect()->to(route('admin::dashboard.index.get'));
         }
 
