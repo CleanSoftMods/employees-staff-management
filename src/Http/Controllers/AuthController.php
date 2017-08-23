@@ -2,7 +2,7 @@
 
 use WebEd\Base\Users\Http\Requests\AuthRequest;
 use WebEd\Base\Users\Support\Traits\Auth;
-
+use Illuminate\Support\Facades\Auth as AuthFacade;
 use WebEd\Base\Http\Controllers\BaseController;
 use WebEd\Base\Users\Repositories\Contracts\UserRepositoryContract;
 
@@ -82,5 +82,10 @@ class AuthController extends BaseController
         $this->guard()->logout();
 
         return redirect()->to($this->redirectToLoginPage);
+    }
+
+    protected function guard()
+    {
+        return AuthFacade::guard(config('webed-auth.guard'));
     }
 }

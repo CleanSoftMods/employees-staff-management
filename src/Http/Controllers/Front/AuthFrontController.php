@@ -4,6 +4,7 @@ use WebEd\Base\Users\Http\Requests\AuthFrontRequest;
 use WebEd\Base\Http\Controllers\BaseController;
 use WebEd\Base\Users\Repositories\Contracts\UserRepositoryContract;
 use WebEd\Base\Users\Support\Traits\Auth;
+use Illuminate\Support\Facades\Auth as AuthFacade;
 
 class AuthFrontController extends BaseController
 {
@@ -86,5 +87,10 @@ class AuthFrontController extends BaseController
         return lang()->has($failedMessage)
             ? lang()->get($failedMessage)
             : 'These credentials do not match our records!!!';
+    }
+
+    protected function guard()
+    {
+        return AuthFacade::guard(config('webed-auth.front_actions.guard'));
     }
 }
