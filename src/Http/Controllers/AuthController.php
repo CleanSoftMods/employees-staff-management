@@ -49,6 +49,10 @@ class AuthController extends BaseController
         $this->redirectPath = route('admin::dashboard.index.get');
         $this->redirectToLoginPage = route('admin::auth.login.get');
 
+        view()->share([
+            'isAuthPages' => true,
+        ]);
+
         assets_management()->getAssetsFrom('admin');
     }
 

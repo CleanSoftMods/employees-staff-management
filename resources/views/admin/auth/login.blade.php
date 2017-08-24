@@ -1,4 +1,4 @@
-@extends('webed-users::admin.auth._auth-actions')
+@extends('webed-core::admin._master')
 
 @section('head')
 
