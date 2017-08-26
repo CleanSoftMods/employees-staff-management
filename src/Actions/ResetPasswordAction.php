@@ -1,12 +1,12 @@
-<?php namespace WebEd\Base\Users\ServerActions;
+<?php namespace WebEd\Base\Users\Actions;
 
-use WebEd\Base\ServerActions\AbstractServerAction;
+use WebEd\Base\Actions\AbstractAction;
 use WebEd\Base\Users\Repositories\Contracts\PasswordResetRepositoryContract;
 use WebEd\Base\Users\Repositories\Contracts\UserRepositoryContract;
 use WebEd\Base\Users\Repositories\PasswordResetRepository;
 use WebEd\Base\Users\Repositories\UserRepository;
 
-class ResetPasswordServerAction extends AbstractServerAction
+class ResetPasswordAction extends AbstractAction
 {
     /**
      * @var PasswordResetRepository

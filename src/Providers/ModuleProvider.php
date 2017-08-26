@@ -1,9 +1,7 @@
 <?php namespace WebEd\Base\Users\Providers;
 
-use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Socialite\SocialiteServiceProvider;
-use WebEd\Base\Users\Http\Middleware\BootstrapModuleMiddleware;
 
 class ModuleProvider extends ServiceProvider
 {
@@ -62,11 +60,5 @@ class ModuleProvider extends ServiceProvider
         $this->app->register(HookServiceProvider::class);
         $this->app->register(EventServiceProvider::class);
         $this->app->register(SocialiteServiceProvider::class);
-
-        /**
-         * @var Router $router
-         */
-        $router = $this->app['router'];
-        $router->pushMiddlewareToGroup('web', BootstrapModuleMiddleware::class);
     }
 }

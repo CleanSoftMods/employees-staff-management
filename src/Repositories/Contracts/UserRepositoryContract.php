@@ -27,14 +27,14 @@ interface UserRepositoryContract
      * @param array $data
      * @return int
      */
-    public function createUser(array $data, array $roles = null);
+    public function createUser(array $data, $roles = null);
 
     /**
      * @param User|int $id
      * @param array $data
      * @return int
      */
-    public function updateUser($id, array $data, array $roles = null);
+    public function updateUser($id, array $data, $roles = null);
 
     /**
      * @param User|int $user

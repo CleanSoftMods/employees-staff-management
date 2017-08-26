@@ -29,7 +29,7 @@
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="user_profiles">
-                        {!! form()->open(['class' => 'js-validate-form', 'url' => route('admin::users.create.post')]) !!}
+                        {!! form()->open(['class' => 'js-validate-form', 'url' => request()->fullUrl()]) !!}
                         {!! form()->hidden('_tab', 'user_profiles') !!}
                         <div class="form-group">
                             <label class="control-label "><b>{{ trans('webed-users::base.display_name') }}</b></label>
@@ -97,20 +97,10 @@
                         </div>
                         <div class="form-group">
                             <label class="control-label"><b>{{ trans('webed-users::base.status') }}</b></label>
-                            <div class="mt-radio-list">
-                                <label class="mt-radio mt-radio-outline">
-                                    <input type="radio" name="status" value="activated"
-                                        {{ (old('status') == 'activated') ? 'checked' : '' }}>
-                                    {{ trans('webed-core::base.status.activated') }}
-                                    <span></span>
-                                </label>
-                                <label class="mt-radio mt-radio-outline">
-                                    <input type="radio" name="status" value="disabled"
-                                        {{ (old('status', 'disabled') == 'disabled') ? 'checked' : '' }}>
-                                    {{ trans('webed-core::base.status.disabled') }}
-                                    <span></span>
-                                </label>
-                            </div>
+                            {!! form()->customRadio('status', [
+                                [1, trans('webed-core::base.status.activated')],
+                                [0, trans('webed-core::base.status.disabled')],
+                            ], old('status', 1)) !!}
                         </div>
                         <div class="form-group">
                             <label class="control-label"><b>{{ trans('webed-users::base.birthday') }}</b></label>

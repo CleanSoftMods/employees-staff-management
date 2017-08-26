@@ -17,7 +17,7 @@ class UpdateUserPasswordRequest extends Request
                 && !has_permissions(get_current_logged_user(), ['edit-other-users'])
             )
         ) {
-            $rules['old_password'] = 'required|max:60|min:5|string|old_password:users,password,' . request()->route()->parameter('id');
+            $rules['old_password'] = 'required|max:60|min:5|string|old_password:' . webed_db_prefix() . 'users,password,' . request()->route()->parameter('id');
         }
 
         return $rules;

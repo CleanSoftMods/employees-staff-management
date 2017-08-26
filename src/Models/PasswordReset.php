@@ -5,7 +5,7 @@ use WebEd\Base\Models\EloquentBase as BaseModel;
 
 class PasswordReset extends BaseModel implements PasswordResetModelContract
 {
-    protected $table = 'we_password_resets';
+    protected $table = 'password_resets';
 
     protected $primaryKey = 'id';
 

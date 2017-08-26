@@ -1,6 +1,6 @@
-<?php namespace WebEd\Base\Users\ServerActions;
+<?php namespace WebEd\Base\Users\Actions;
 
-use WebEd\Base\ServerActions\AbstractServerAction;
+use WebEd\Base\Actions\AbstractAction;
 use Illuminate\Http\Request;
 use WebEd\Base\Users\Mails\ResetPasswordMail;
 use WebEd\Base\Users\Repositories\Contracts\UserRepositoryContract;
@@ -8,7 +8,7 @@ use WebEd\Base\Users\Repositories\UserRepository;
 use WebEd\Base\Users\Services\GenerateResetPasswordTokenService;
 use Illuminate\Support\Facades\Mail;
 
-class ForgotPasswordServerAction extends AbstractServerAction
+class ForgotPasswordAction extends AbstractAction
 {
     /**
      * @var UserRepository

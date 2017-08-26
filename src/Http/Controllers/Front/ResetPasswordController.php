@@ -6,8 +6,8 @@ use WebEd\Base\Users\Http\Requests\ResetPasswordRequest;
 use WebEd\Base\Users\Repositories\Contracts\PasswordResetRepositoryContract;
 use WebEd\Base\Users\Repositories\Contracts\UserRepositoryContract;
 use WebEd\Base\Users\Repositories\UserRepository;
-use WebEd\Base\Users\ServerActions\ForgotPasswordServerAction;
-use WebEd\Base\Users\ServerActions\ResetPasswordServerAction;
+use WebEd\Base\Users\Actions\ForgotPasswordAction;
+use WebEd\Base\Users\Actions\ResetPasswordAction;
 
 class ResetPasswordController extends BaseFrontController
 {
@@ -62,10 +62,10 @@ class ResetPasswordController extends BaseFrontController
 
     /**
      * @param ResetPasswordRequest $request
-     * @param ResetPasswordServerAction $action
+     * @param ResetPasswordAction $action
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function postIndex(ResetPasswordRequest $request, ResetPasswordServerAction $action)
+    public function postIndex(ResetPasswordRequest $request, ResetPasswordAction $action)
     {
         $result = $action->run($request->get('token'), $request->get('password'));
 

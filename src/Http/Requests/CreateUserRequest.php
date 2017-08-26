@@ -12,10 +12,10 @@ class CreateUserRequest extends Request
     public function rules()
     {
         return [
-            'username' => 'required|between:3,100|string|unique:we_users|alpha_dash',
-            'email' => 'required|between:5,255|email|unique:we_users',
+            'username' => 'required|between:3,100|string|unique:' . webed_db_prefix() . 'users|alpha_dash',
+            'email' => 'required|between:5,255|email|unique:' . webed_db_prefix() . 'users',
             'password' => 'required|max:60|min:5|string',
-            'status' => 'string|required|in:activated,disabled,deleted',
+            'status' => 'required',
             'display_name' => 'string|between:1,150|nullable',
             'first_name' => 'string|between:1,100|required',
             'last_name' => 'string|between:1,100|nullable',

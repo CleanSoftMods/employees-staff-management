@@ -58,23 +58,25 @@ class UserRepository extends EloquentBaseRepository implements UserRepositoryCon
 
     /**
      * @param array $data
-     * @return int
+     * @param array|null $roles
+     * @return int|null|\WebEd\Base\Models\EloquentBase
      */
-    public function createUser(array $data, array $roles = null)
+    public function createUser(array $data, $roles = null)
     {
         $user = $this->create($data);
-        if ($user && $roles !== null) {
+        if ($user && is_array($roles)) {
             $this->syncRoles($user, $roles);
         }
         return $user;
     }
 
     /**
-     * @param User|int $id
+     * @param int|User $id
      * @param array $data
-     * @return int
+     * @param array|null $roles
+     * @return int|null|\WebEd\Base\Models\EloquentBase
      */
-    public function updateUser($id, array $data, array $roles = null)
+    public function updateUser($id, array $data, $roles = null)
     {
         $resultEditObject = $this->update($id, $data);
 
@@ -82,7 +84,7 @@ class UserRepository extends EloquentBaseRepository implements UserRepositoryCon
             return $resultEditObject;
         }
 
-        if ($roles !== null) {
+        if (is_array($roles)) {
             $this->syncRoles($id, $roles);
         }
 
