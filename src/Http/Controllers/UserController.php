@@ -135,11 +135,9 @@ class UserController extends BaseAdminController
             ));
         }
 
-        $data = [
+        $result = $action->run($id, [
             'status' => $status
-        ];
-
-        $result = $action->run($id, $data);
+        ]);
 
         return response()->json($result, $result['response_code']);
     }
