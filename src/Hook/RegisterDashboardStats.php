@@ -1,7 +1,7 @@
-<?php namespace WebEd\Base\Users\Hook;
+<?php namespace CleanSoft\Modules\Core\Users\Hook;
 
-use WebEd\Base\Users\Repositories\Contracts\UserRepositoryContract;
-use WebEd\Base\Users\Repositories\UserRepository;
+use CleanSoft\Modules\Core\Users\Repositories\Contracts\UserRepositoryContract;
+use CleanSoft\Modules\Core\Users\Repositories\UserRepository;
 
 class RegisterDashboardStats
 {

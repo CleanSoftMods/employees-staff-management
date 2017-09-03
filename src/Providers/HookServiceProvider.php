@@ -1,7 +1,7 @@
-<?php namespace WebEd\Base\Users\Providers;
+<?php namespace CleanSoft\Modules\Core\Users\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use WebEd\Base\Users\Hook\RegisterDashboardStats;
+use CleanSoft\Modules\Core\Users\Hook\RegisterDashboardStats;
 
 class HookServiceProvider extends ServiceProvider
 {
@@ -12,7 +12,7 @@ class HookServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        add_action('webed-dashboard.index.stat-boxes.get', [RegisterDashboardStats::class, 'handle'], 24);
+        add_action(WEBED_DASHBOARD_STATS, [RegisterDashboardStats::class, 'handle'], 24);
     }
 
     /**

@@ -1,76 +1,43 @@
-<?php namespace WebEd\Base\Users\Repositories;
+<?php namespace CleanSoft\Modules\Core\Users\Repositories;
 
-use WebEd\Base\Core\Repositories\AbstractBaseRepository;
-use WebEd\Base\Caching\Services\Contracts\CacheableContract;
-use WebEd\Base\Core\Repositories\Contracts\UseSoftDeletesContract;
-use WebEd\Base\Users\Models\Contracts\UserModelContract;
-use WebEd\Base\Users\Models\User;
-use WebEd\Base\Users\Repositories\Contracts\UserRepositoryContract;
+use Illuminate\Support\Collection;
+use CleanSoft\Modules\Core\Repositories\Eloquent\Traits\EloquentUseSoftDeletes;
+use CleanSoft\Modules\Core\Repositories\Eloquent\EloquentBaseRepository;
+use CleanSoft\Modules\Core\Users\Models\Contracts\UserModelContract;
+use CleanSoft\Modules\Core\Users\Models\User;
+use CleanSoft\Modules\Core\Users\Repositories\Contracts\UserRepositoryContract;
 
-class UserRepository extends AbstractBaseRepository implements UserRepositoryContract, CacheableContract, UseSoftDeletesContract
+class UserRepository extends EloquentBaseRepository implements UserRepositoryContract
 {
-    use \WebEd\Base\Core\Repositories\Traits\UseSoftDeletes;
-
-    protected $rules = [
-        'username' => 'required|between:3,100|string|unique:users|alpha_dash',
-        'email' => 'required|between:5,255|email|unique:users',
-        'password' => 'required|max:60|min:5|string',
-        'status' => 'string|required|in:activated,disabled,deleted',
-        'display_name' => 'string|between:1,150|nullable',
-        'first_name' => 'string|between:1,100|required',
-        'last_name' => 'string|between:1,100|nullable',
-        'avatar' => 'string|between:1,150|nullable',
-        'phone' => 'string|max:20|nullable',
-        'mobile_phone' => 'string|max:20|nullable',
-        'sex' => 'string|required|in:male,female,other',
-        'birthday' => 'date_multi_format:Y-m-d H:i:s,Y-m-d|nullable',
-        'description' => 'string|max:1000|nullable',
-        'created_by' => 'integer|required|min:0',
-        'updated_by' => 'integer|min:0',
-        'last_login_at' => 'string|date_format:Y-m-d H:i:s',
-        'last_activity_at' => 'string|date_format:Y-m-d H:i:s',
-        'disabled_until' => 'string|date_format:Y-m-d H:i:s',
-        'deleted_at' => 'string|date_format:Y-m-d H:i:s',
-    ];
-
-    protected $editableFields = [
-        'username',
-        'email',
-        'password',
-        'status',
-        'display_name',
-        'first_name',
-        'last_name',
-        'avatar',
-        'phone',
-        'mobile_phone',
-        'sex',
-        'birthday',
-        'description',
-        'created_by',
-        'updated_by',
-        'last_login_at',
-        'last_activity_at',
-        'disabled_until',
-        'deleted_at',
-    ];
+    use EloquentUseSoftDeletes;
 
     /**
-     * @param \WebEd\Base\Users\Models\User $model
-     * @param \Illuminate\Database\Eloquent\Collection|array $data
+     * @param User|int $user
+     * @param array $data
      */
-    public function syncRoles($model, $data)
+    public function syncRoles($user, array $data)
     {
-        $model->roles()->sync($data);
+        if (!$user instanceof User) {
+            $user = $this->find($user);
+        }
+        try {
+            $user->roles()->sync($data);
+        } catch (\Exception $exception) {
+            return false;
+        }
 
-        return $this;
+        return true;
     }
 
     /**
-     * @param \WebEd\Base\Users\Models\User $user
+     * @param User|int $user
+     * @return Collection
      */
     public function getRoles($user)
     {
+        if (!$user instanceof User) {
+            $user = $this->find($user);
+        }
         if ($user) {
             return $user->roles()->get();
         }
@@ -78,63 +45,63 @@ class UserRepository extends AbstractBaseRepository implements UserRepositoryCon
     }
 
     /**
-     * @param array $data
+     * @param User $user
      * @return array
      */
-    public function createUser(array $data)
+    public function getRelatedRoleIds($user)
     {
-        $resultEditObject = $this->editWithValidate(0, $data, true, false);
-
-        if ($resultEditObject['error']) {
-            return $this->setMessages($resultEditObject['messages'], true, \Constants::ERROR_CODE);
+        if ($user) {
+            return $user->roles()->allRelatedIds()->toArray();
         }
-        $object = $resultEditObject['data'];
-
-        $result = $this->setMessages('User created successfully', false, \Constants::SUCCESS_CODE, $object);
-
-        return $result;
+        return [];
     }
 
     /**
-     * @param $id
      * @param array $data
-     * @return array
+     * @param array|null $roles
+     * @return int|null|\CleanSoft\Modules\Core\Models\EloquentBase
      */
-    public function updateUser($id, array $data)
+    public function createUser(array $data, $roles = null)
     {
-        $resultEditObject = $this->editWithValidate($id, $data, false, true);
-
-        if ($resultEditObject['error']) {
-            return $this->setMessages($resultEditObject['messages'], true, \Constants::ERROR_CODE);
+        $user = $this->create($data);
+        if ($user && is_array($roles)) {
+            $this->syncRoles($user, $roles);
         }
-        $object = $resultEditObject['data'];
-
-        if (isset($data['roles']) && is_array($data['roles'])) {
-            $this->syncRoles($object, $data['roles']);
-        }
-
-        $result = $this->setMessages('User updated successfully', false, \Constants::SUCCESS_CODE, $object);
-
-        return $result;
+        return $user;
     }
 
     /**
-     * @param User|int $id
+     * @param int|User $id
+     * @param array $data
+     * @param array|null $roles
+     * @return int|null|\CleanSoft\Modules\Core\Models\EloquentBase
+     */
+    public function updateUser($id, array $data, $roles = null)
+    {
+        $resultEditObject = $this->update($id, $data);
+
+        if (!$resultEditObject) {
+            return $resultEditObject;
+        }
+
+        if (is_array($roles)) {
+            $this->syncRoles($id, $roles);
+        }
+
+        return $resultEditObject;
+    }
+
+    /**
+     * @param User|int $user
      * @return bool
      */
-    public function isSuperAdmin($id)
+    public function isSuperAdmin($user)
     {
-        if ($id instanceof UserModelContract) {
-            $model = $id;
-        } else {
-            $model = $this->find($id);
+        if (!$user instanceof User) {
+            $user = $this->find($user);
         }
 
-        if (!$model) {
-            return false;
-        }
-
-        if (!$model->isSuperAdmin()) {
+        if (!$user || !$user->isSuperAdmin()) {
             return false;
         }
 
@@ -142,23 +109,17 @@ class UserRepository extends AbstractBaseRepository implements UserRepositoryCon
     }
 
     /**
-     * @param User|int $id
+     * @param User|int $user
      * @param array $permissions
      * @return bool
      */
-    public function hasPermission($id, array $permissions)
+    public function hasPermission($user, array $permissions)
     {
-        if ($id instanceof UserModelContract) {
-            $model = $id;
-        } else {
-            $model = $this->find($id);
+        if (!$user instanceof User) {
+            $user = $this->find($user);
         }
 
-        if (!$model) {
-            return false;
-        }
-
-        if (!$model->hasPermission($permissions)) {
+        if (!$user || !$user->hasPermission($permissions)) {
             return false;
         }
 
@@ -166,23 +127,17 @@ class UserRepository extends AbstractBaseRepository implements UserRepositoryCon
     }
 
     /**
-     * @param User|int $id
+     * @param User|int $user
      * @param array $roles
      * @return bool
      */
-    public function hasRole($id, array $roles)
+    public function hasRole($user, array $roles)
     {
-        if ($id instanceof UserModelContract) {
-            $model = $id;
-        } else {
-            $model = $this->find($id);
+        if (!$user instanceof User) {
+            $user = $this->find($user);
         }
 
-        if (!$model) {
-            return false;
-        }
-
-        if (!$model->hasRole($roles)) {
+        if (!$user || !$user->hasRole($roles)) {
             return false;
         }
 

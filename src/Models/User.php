@@ -1,14 +1,16 @@
-<?php namespace WebEd\Base\Users\Models;
+<?php namespace CleanSoft\Modules\Core\Users\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use WebEd\Base\Users\Models\Contracts\UserModelContract;
-use WebEd\Base\Core\Models\EloquentBase as BaseModel;
-
+use Illuminate\Notifications\Notifiable;
+use CleanSoft\Modules\Core\Users\Models\Contracts\UserModelContract;
+use CleanSoft\Modules\Core\Models\EloquentBase as BaseModel;
+use CleanSoft\Modules\Core\ACL\Models\Traits\UserAuthorizable;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-use \WebEd\Base\ACL\Models\Traits\UserAuthorizable;
+use CleanSoft\Modules\Core\Users\Notifications\ResetPasswordNotification;
 
 class User extends BaseModel implements UserModelContract, AuthenticatableContract, CanResetPasswordContract
 {
@@ -17,6 +19,8 @@ class User extends BaseModel implements UserModelContract, AuthenticatableContra
     use UserAuthorizable;
 
     use SoftDeletes;
+
+    use Notifiable;
 
     protected $table = 'users';
 
@@ -33,6 +37,21 @@ class User extends BaseModel implements UserModelContract, AuthenticatableContra
         'birthday', 'description', 'disabled_until',
     ];
 
+    /**
+     * @return mixed|string
+     */
+    public function getUserName()
+    {
+        if ($this->display_name) {
+            return $this->display_name;
+        }
+        return (($this->first_name ? $this->first_name . ' ' : '') . ($this->last_name ?: ''));
+    }
+
+    /**
+     * @param $value
+     * @return int
+     */
     public function getIdAttribute($value)
     {
         return (int)$value;
@@ -50,5 +69,28 @@ class User extends BaseModel implements UserModelContract, AuthenticatableContra
     public function setUsernameAttribute($value)
     {
         $this->attributes['username'] = str_slug($value, '_');
+    }
+
+    /**
+     * @param string $token
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $expiredDateConfig = (int)config('webed-auth.front_actions.forgot_password.link_expired_after', 30) ?: 1;
+
+        $expiredDate = Carbon::now()->addHour($expiredDateConfig);
+
+        $data = [
+            'username' => $this->username,
+            'name' => $this->getUserName(),
+            'email' => $this->email,
+            'link' => route('front::auth.reset_password.get', [
+                'token' => $token,
+            ]),
+            'token' => $token,
+            'expired_at' => $expiredDate,
+        ];
+
+        $this->notify(new ResetPasswordNotification($data));
     }
 }

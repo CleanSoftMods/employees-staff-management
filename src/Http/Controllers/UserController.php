@@ -1,13 +1,19 @@
-<?php namespace WebEd\Base\Users\Http\Controllers;
+<?php namespace CleanSoft\Modules\Core\Users\Http\Controllers;
 
-use WebEd\Base\ACL\Repositories\Contracts\RoleRepositoryContract;
-use WebEd\Base\Core\Http\Controllers\BaseAdminController;
-use WebEd\Base\Users\Http\DataTables\UsersListDataTable;
-use WebEd\Base\Users\Http\Requests\CreateUserRequest;
-use WebEd\Base\Users\Http\Requests\UpdateUserPasswordRequest;
-use WebEd\Base\Users\Http\Requests\UpdateUserRequest;
-use WebEd\Base\Users\Repositories\Contracts\UserRepositoryContract;
-use WebEd\Base\Users\Repositories\UserRepository;
+use Illuminate\Http\Request;
+use CleanSoft\Modules\Core\ACL\Repositories\Contracts\RoleRepositoryContract;
+use CleanSoft\Modules\Core\ACL\Repositories\RoleRepository;
+use CleanSoft\Modules\Core\Http\Controllers\BaseAdminController;
+use CleanSoft\Modules\Core\Users\Actions\CreateUserAction;
+use CleanSoft\Modules\Core\Users\Actions\DeleteUserAction;
+use CleanSoft\Modules\Core\Users\Actions\RestoreUserAction;
+use CleanSoft\Modules\Core\Users\Actions\UpdateUserAction;
+use CleanSoft\Modules\Core\Users\Http\DataTables\UsersListDataTable;
+use CleanSoft\Modules\Core\Users\Http\Requests\CreateUserRequest;
+use CleanSoft\Modules\Core\Users\Http\Requests\UpdateUserPasswordRequest;
+use CleanSoft\Modules\Core\Users\Http\Requests\UpdateUserRequest;
+use CleanSoft\Modules\Core\Users\Repositories\Contracts\UserRepositoryContract;
+use CleanSoft\Modules\Core\Users\Repositories\UserRepository;
 use Yajra\Datatables\Engines\BaseEngine;
 
 class UserController extends BaseAdminController
@@ -15,7 +21,7 @@ class UserController extends BaseAdminController
     protected $module = 'webed-users';
 
     /**
-     * @var \WebEd\Base\Users\Repositories\UserRepository
+     * @var \CleanSoft\Modules\Core\Users\Repositories\UserRepository
      */
     protected $repository;
 
@@ -26,19 +32,28 @@ class UserController extends BaseAdminController
     {
         parent::__construct();
 
-        $this->repository = $userRepository->withTrashed();
-        $this->breadcrumbs->addLink('Users', route('admin::users.index.get'));
+        $this->middleware(function (Request $request, $next) {
+            $this->breadcrumbs->addLink(trans($this->module . '::base.users'), route('admin::users.index.get'));
 
-        $this->getDashboardMenu($this->module);
+            $this->getDashboardMenu($this->module);
+
+            return $next($request);
+        });
+
+        $this->repository = $userRepository;
     }
 
+    /**
+     * @param UsersListDataTable $usersListDataTable
+     * @return mixed
+     */
     public function getIndex(UsersListDataTable $usersListDataTable)
     {
-        $this->setPageTitle('All users');
+        $this->setPageTitle(trans($this->module . '::base.users'));
 
         $this->dis['dataTable'] = $usersListDataTable->run();
 
-        return do_filter('users.index.get', $this)->viewAdmin('index');
+        return do_filter(BASE_FILTER_CONTROLLER, $this, WEBED_USERS, 'index.get', $usersListDataTable)->viewAdmin('index');
     }
 
     /**
@@ -50,14 +65,14 @@ class UserController extends BaseAdminController
     {
         $data = $usersListDataTable->with($this->groupAction());
 
-        return do_filter('datatables.users.index.post', $data, $this);
+        return do_filter(BASE_FILTER_CONTROLLER, $data, WEBED_USERS, 'index.post', $this);
     }
 
     /**
      * Handle group actions
      * @return array
      */
-    private function groupAction()
+    protected function groupAction()
     {
         $data = [];
         if ($this->request->get('customActionType', null) == 'group_action') {
@@ -65,7 +80,7 @@ class UserController extends BaseAdminController
 
             if (!$this->repository->hasPermission($this->loggedInUser, ['edit-other-users'])) {
                 return [
-                    'customActionMessage' => 'You do not have permission',
+                    'customActionMessage' => trans('webed-acl::base.do_not_have_permission'),
                     'customActionStatus' => 'danger',
                 ];
             }
@@ -77,21 +92,29 @@ class UserController extends BaseAdminController
             switch ($actionValue) {
                 case 'deleted':
                     if (!$this->repository->hasPermission($this->loggedInUser, ['delete-users'])) {
-                        $data['customActionMessage'] = 'You do not have permission';
+                        $data['customActionMessage'] = trans('webed-acl::base.do_not_have_permission');
                         $data['customActionStatus'] = 'danger';
                         return $data;
                     }
-                    $result = $this->repository->delete($ids);
+
+                    $action = app(DeleteUserAction::class);
+                    foreach ($ids as $id) {
+                        $this->deleteDelete($action, $id);
+                    }
                     break;
                 default:
-                    $result = $this->repository->updateMultiple($ids, [
-                        'status' => $actionValue,
-                    ], true);
+                    $action = app(UpdateUserAction::class);
+
+                    foreach ($ids as $id) {
+                        $action->run($id, [
+                            'status' => $actionValue,
+                        ]);
+                    }
                     break;
             }
 
-            $data['customActionMessage'] = $result['messages'];
-            $data['customActionStatus'] = $result['error'] ? 'danger' : 'success';
+            $data['customActionMessage'] = trans('webed-core::base.form.request_completed');
+            $data['customActionStatus'] = 'success';
         }
         return $data;
     }
@@ -102,17 +125,20 @@ class UserController extends BaseAdminController
      * @param $status
      * @return \Illuminate\Http\JsonResponse
      */
-    public function postUpdateStatus($id, $status)
+    public function postUpdateStatus(UpdateUserAction $action, $id, $status)
     {
-        $data = [
-            'status' => $status
-        ];
-
-        if ($this->loggedInUser->id == $id) {
-            $result = response_with_messages('You cannot update status of yourself', true, \Constants::ERROR_CODE);
-        } else {
-            $result = $this->repository->updateUser($id, $data);
+        if ($id == get_current_logged_user_id()) {
+            return response()->json(response_with_messages(
+                trans('webed-users::base.cannot_update_status_yourself'),
+                true,
+                \Constants::FORBIDDEN_CODE
+            ));
         }
+
+        $result = $action->run($id, [
+            'status' => $status
+        ]);
+
         return response()->json($result, $result['response_code']);
     }
 
@@ -121,33 +147,29 @@ class UserController extends BaseAdminController
      */
     public function getCreate()
     {
-        $this->setPageTitle('Create user');
-        $this->breadcrumbs->addLink('Create user');
+        $this->setPageTitle(trans($this->module . '::base.create_user'));
+        $this->breadcrumbs->addLink(trans($this->module . '::base.create_user'));
 
         $this->dis['isLoggedInUser'] = false;
         $this->dis['isSuperAdmin'] = $this->loggedInUser->isSuperAdmin();
 
-        $this->dis['currentId'] = 0;
-
         $this->dis['object'] = $this->repository->getModel();
-
-        $oldInputs = old();
-        if ($oldInputs) {
-            foreach ($oldInputs as $key => $row) {
-                $this->dis['object']->$key = $row;
-            }
-        }
 
         $this->assets
             ->addStylesheets('bootstrap-datepicker')
             ->addJavascripts('bootstrap-datepicker')
-            ->addJavascriptsDirectly(asset('admin/modules/users/user-profiles/user-profiles.js'))
-            ->addStylesheetsDirectly(asset('admin/modules/users/user-profiles/user-profiles.css'));
+            ->addJavascriptsDirectly('admin/modules/users/user-profiles/user-profiles.js')
+            ->addStylesheetsDirectly('admin/modules/users/user-profiles/user-profiles.css');
 
-        return do_filter('users.create.get', $this)->viewAdmin('create');
+        return do_filter(BASE_FILTER_CONTROLLER, $this, WEBED_USERS, 'create.get')->viewAdmin('create');
     }
 
-    public function postCreate(CreateUserRequest $request)
+    /**
+     * @param CreateUserRequest $request
+     * @param CreateUserAction $action
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function postCreate(CreateUserRequest $request, CreateUserAction $action)
     {
         $data = $request->except([
             '_token', '_continue_edit', '_tab', 'roles',
@@ -158,13 +180,12 @@ class UserController extends BaseAdminController
         }
 
         $data['created_by'] = $this->loggedInUser->id;
-        $data['updated_by'] = $this->loggedInUser->id;
 
-        $result = $this->repository->createUser($data);
+        $result = $action->run($data);
 
         $msgType = $result['error'] ? 'danger' : 'success';
 
-        $this->flashMessagesHelper
+        flash_messages()
             ->addMessages($result['messages'], $msgType)
             ->showMessagesOnSession();
 
@@ -172,21 +193,24 @@ class UserController extends BaseAdminController
             return redirect()->back()->withInput();
         }
 
-        do_action('users.after-create.post', $result['data']->id, $result, $this);
-
         if ($request->has('_continue_edit')) {
-            return redirect()->to(route('admin::users.edit.get', ['id' => $result['data']->id]));
+            return redirect()->to(route('admin::users.edit.get', ['id' => $result['data']['id']]));
         }
 
         return redirect()->to(route('admin::users.index.get'));
     }
 
+    /**
+     * @param RoleRepository $roleRepository
+     * @param $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function getEdit(RoleRepositoryContract $roleRepository, $id)
     {
-        $this->dis['isLoggedInUser'] = (int)$this->loggedInUser->id === (int)$id ? true : false;
+        $this->dis['isLoggedInUser'] = $this->loggedInUser->id === $id ? true : false;
         $this->dis['isSuperAdmin'] = $this->loggedInUser->isSuperAdmin();
 
-        if ((int)$this->loggedInUser->id !== (int)$id) {
+        if ($this->loggedInUser->id !== $id) {
             if (!$this->repository->hasPermission($this->loggedInUser, ['edit-other-users'])) {
                 abort(\Constants::FORBIDDEN_CODE);
             }
@@ -195,22 +219,22 @@ class UserController extends BaseAdminController
         $item = $this->repository->find($id);
 
         if (!$item) {
-            $this->flashMessagesHelper
-                ->addMessages('User not found', 'danger')
+            flash_messages()
+                ->addMessages(trans($this->module . '::base.user_not_found'), 'danger')
                 ->showMessagesOnSession();
 
             return redirect()->back();
         }
 
-        $this->setPageTitle('Edit user', '#' . $id);
-        $this->breadcrumbs->addLink('Edit user');
+        $this->setPageTitle(trans($this->module . '::base.edit_user'), '#' . $id);
+        $this->breadcrumbs->addLink(trans($this->module . '::base.edit_user'));
 
         $this->dis['object'] = $item;
 
-        if (!$this->dis['isLoggedInUser'] && ($this->dis['isSuperAdmin'] || $this->repository->hasPermission($this->loggedInUser, ['assign-roles']))) {
-            $roles = $roleRepository->all();
+        if (!$this->dis['isLoggedInUser'] && ($this->dis['isSuperAdmin'] || $this->loggedInUser->hasPermission(['assign-roles']))) {
+            $roles = $roleRepository->get();
 
-            $checkedRoles = $item->roles()->allRelatedIds()->toArray();
+            $checkedRoles = $this->repository->getRelatedRoleIds($item);
 
             $resolvedRoles = [];
             foreach ($roles as $role) {
@@ -221,49 +245,31 @@ class UserController extends BaseAdminController
             $this->dis['roles'] = $resolvedRoles;
         }
 
-        $this->dis['currentId'] = $id;
-
         $this->assets
             ->addStylesheets('bootstrap-datepicker')
             ->addJavascripts('bootstrap-datepicker')
-            ->addJavascriptsDirectly(asset('admin/modules/users/user-profiles/user-profiles.js'))
-            ->addStylesheetsDirectly(asset('admin/modules/users/user-profiles/user-profiles.css'));
+            ->addJavascriptsDirectly('admin/modules/users/user-profiles/user-profiles.js')
+            ->addStylesheetsDirectly('admin/modules/users/user-profiles/user-profiles.css');
 
-        return do_filter('users.edit.get', $this, $id)->viewAdmin('edit');
+        return do_filter(BASE_FILTER_CONTROLLER, $this, WEBED_USERS, 'edit.get', $id)->viewAdmin('edit');
     }
 
+    /**
+     * @param UpdateUserRequest $request
+     * @param $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function postEdit(UpdateUserRequest $request, $id)
     {
-        $user = $this->repository->find($id);
-
-        if (!$user) {
-            $this->flashMessagesHelper
-                ->addMessages('User not found', 'danger')
-                ->showMessagesOnSession();
-
-            return redirect()->back();
-        }
-
-        if ((int)$this->loggedInUser->id !== (int)$id) {
-            if (!$this->repository->hasPermission($this->loggedInUser, ['edit-other-users'])) {
-                abort(\Constants::FORBIDDEN_CODE);
-            }
-        }
-        if ($this->request->exists('roles')) {
-            if (!$this->repository->hasPermission($this->loggedInUser, ['assign-roles'])) {
-                abort(\Constants::FORBIDDEN_CODE);
-            }
-        }
-
         $data = $this->request->except([
-            '_token', '_continue_edit', '_tab', 'username', 'email', 'roles'
+            '_token', '_continue_edit', '_tab', 'username', 'email', 'roles',
         ]);
 
         if ($request->requestHasRoles()) {
-            $data['roles'] = $request->getResolvedRoles();
+            $roles = $request->getResolvedRoles();
         } else {
             if ($this->request->get('_tab') === 'roles') {
-                $data['roles'] = [];
+                $roles = [];
             }
         }
         if ($this->request->exists('birthday') && !$this->request->get('birthday')) {
@@ -276,78 +282,89 @@ class UserController extends BaseAdminController
         $isLoggedInUser = (int)$this->loggedInUser->id === (int)$id ? true : false;
         if ($isLoggedInUser) {
             if ($this->request->exists('roles')) {
-                unset($data['roles']);
+                $roles = null;
             }
+        }
+
+        if (!isset($roles)) {
+            $roles = null;
         }
 
         $data['updated_by'] = $this->loggedInUser->id;
 
-        return $this->updateUser($user, $data);
+        return $this->updateUser($id, $data, $roles);
     }
 
+    /**
+     * @param UpdateUserPasswordRequest $request
+     * @param $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function postUpdatePassword(UpdateUserPasswordRequest $request, $id)
     {
-        $user = $this->repository->find($id);
-
-        return $this->updateUser($user, [
+        return $this->updateUser($id, [
             'password' => $request->get('password'),
         ]);
     }
 
-    protected function updateUser($user, $data)
+    /**
+     * @param $id
+     * @param array $data
+     * @param array|null $roles
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    protected function updateUser($id, array $data, $roles = null)
     {
-        if (!$user) {
-            $this->flashMessagesHelper
-                ->addMessages('User not found', 'danger')
-                ->showMessagesOnSession();
+        $action = app(UpdateUserAction::class);
 
-            return redirect()->back();
-        }
-
-        $result = $this->repository->updateUser($user, $data);
+        $result = $action->run($id, $data, $roles);
 
         $msgType = $result['error'] ? 'danger' : 'success';
 
-        $this->flashMessagesHelper
+        flash_messages()
             ->addMessages($result['messages'], $msgType)
             ->showMessagesOnSession();
 
-        if ($result['error']) {
-            return redirect()->back();
-        }
-
-        do_action('users.after-edit.post', $user->id, $result, $this);
-
-        if ($this->request->has('_continue_edit')) {
+        if ($result['error'] || $this->request->has('_continue_edit')) {
             return redirect()->back();
         }
 
         return redirect()->to(route('admin::users.index.get'));
     }
 
-    public function deleteDelete($id)
+    /**
+     * @param DeleteUserAction $action
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteDelete(DeleteUserAction $action, $id)
     {
-        if ($this->loggedInUser->id == $id) {
-            $result = response_with_messages('You cannot delete yourself', true, \Constants::ERROR_CODE);
-        } else {
-            $result = $this->repository->delete($id);
-        }
+        $result = $action->run($id);
+
         return response()->json($result, $result['response_code']);
     }
 
-    public function deleteForceDelete($id)
+    /**
+     * @param DeleteUserAction $action
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteForceDelete(DeleteUserAction $action, $id)
     {
-        if ($this->loggedInUser->id == $id) {
-            $result = response_with_messages('You cannot delete yourself', true, \Constants::ERROR_CODE);
-        } else {
-            $result = $this->repository->forceDelete($id);
-        }
+        $result = $action->run($id, true);
+
         return response()->json($result, $result['response_code']);
     }
 
-    public function postRestore($id)
+    /**
+     * @param RestoreUserAction $action
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function postRestore(RestoreUserAction $action, $id)
     {
-        $result = $this->repository->restore($id);
+        $result = $action->run($id);
+
         return response()->json($result, $result['response_code']);
     }
 }

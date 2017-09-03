@@ -1,6 +1,7 @@
-<?php namespace WebEd\Base\Users\Providers;
+<?php namespace CleanSoft\Modules\Core\Users\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Laravel\Socialite\SocialiteServiceProvider;
 
 class ModuleProvider extends ServiceProvider
 {
@@ -15,8 +16,6 @@ class ModuleProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'webed-users');
         /*Load translations*/
         $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'webed-users');
-        /*Load migrations*/
-        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 
         $this->publishes([
             __DIR__ . '/../../resources/views' => config('view.paths')[0] . '/vendor/webed-users',
@@ -42,9 +41,21 @@ class ModuleProvider extends ServiceProvider
      */
     public function register()
     {
+        load_module_helpers(__DIR__);
+
+        //Merge configs
+        $configs = split_files_with_basename($this->app['files']->glob(__DIR__ . '/../../config/*.php'));
+
+        foreach ($configs as $key => $row) {
+            $this->mergeConfigFrom($row, $key);
+        }
+
         $this->app->register(RouteServiceProvider::class);
+        $this->app->register(MiddlewareServiceProvider::class);
         $this->app->register(RepositoryServiceProvider::class);
         $this->app->register(HookServiceProvider::class);
+        $this->app->register(EventServiceProvider::class);
+        $this->app->register(SocialiteServiceProvider::class);
         $this->app->register(BootstrapModuleServiceProvider::class);
     }
 }
